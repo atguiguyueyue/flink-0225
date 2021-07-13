@@ -1,21 +1,27 @@
-package com.atguigu.day01;
+package com.atguigu.day02;
 
 import org.apache.flink.api.common.functions.FlatMapFunction;
 import org.apache.flink.api.common.functions.MapFunction;
 import org.apache.flink.api.java.functions.KeySelector;
 import org.apache.flink.api.java.tuple.Tuple2;
+import org.apache.flink.configuration.Configuration;
 import org.apache.flink.streaming.api.datastream.DataStreamSource;
 import org.apache.flink.streaming.api.datastream.KeyedStream;
 import org.apache.flink.streaming.api.datastream.SingleOutputStreamOperator;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.util.Collector;
 
-public class Flink03_WordCount_UnBounded {
+public class Flink01_WordCount_UnBounded {
     public static void main(String[] args) throws Exception {
         //1.获取流的执行环境
         StreamExecutionEnvironment senv = StreamExecutionEnvironment.getExecutionEnvironment();
 
+        //通过这种方式可以方便来看ui界面
+//        StreamExecutionEnvironment senv = StreamExecutionEnvironment.createLocalEnvironmentWithWebUI(new Configuration());
+
         senv.setParallelism(1);
+
+//        senv.disableOperatorChaining();
 
         //2.获取无界的数据
         DataStreamSource<String> streamSource = senv.socketTextStream("hadoop102", 9999);
@@ -37,7 +43,7 @@ public class Flink03_WordCount_UnBounded {
             public Tuple2<String, Long> map(String value) throws Exception {
                 return Tuple2.of(value, 1L);
             }
-        });
+        }).slotSharingGroup("group1");
 
         //5.将相同key的数据聚和到一块
         KeyedStream<Tuple2<String, Long>, String> keyedStream = wordToOneDStream.keyBy(new KeySelector<Tuple2<String, Long>, String>() {
