@@ -12,7 +12,7 @@ import org.apache.flink.util.Collector;
 
 import java.util.HashMap;
 
-public class Flink07__Project_Order {
+public class Flink07_Project_Order {
     public static void main(String[] args) throws Exception {
         //1.获取流执行环境
         StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
