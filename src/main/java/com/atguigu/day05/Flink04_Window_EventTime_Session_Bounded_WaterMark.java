@@ -60,7 +60,7 @@ public class Flink04_Window_EventTime_Session_Bounded_WaterMark {
             @Override
             public void process(String key, Context context, Iterable<WaterSensor> elements, Collector<String> out) throws Exception {
                 String msg = "当前key: " + key
-                        + "窗口: [" + context.window().getStart() / 1000 + "," + context.window().getEnd()/1000 + ") 一共有 "
+                        + "窗口: [" + context.window().getStart() / 1000 + "," + context.window().getEnd()/1000 + "] 一共有 "
                         + elements.spliterator().estimateSize() + "条数据 ";
                 out.collect(msg);
             }

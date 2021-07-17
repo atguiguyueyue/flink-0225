@@ -3,10 +3,7 @@ package com.atguigu.day05;
 import com.atguigu.bean.WaterSensor;
 import org.apache.flink.api.common.eventtime.SerializableTimestampAssigner;
 import org.apache.flink.api.common.eventtime.WatermarkStrategy;
-import org.apache.flink.api.common.functions.FlatMapFunction;
 import org.apache.flink.api.common.functions.MapFunction;
-import org.apache.flink.api.java.functions.KeySelector;
-import org.apache.flink.api.java.tuple.Tuple2;
 import org.apache.flink.streaming.api.datastream.DataStreamSource;
 import org.apache.flink.streaming.api.datastream.KeyedStream;
 import org.apache.flink.streaming.api.datastream.SingleOutputStreamOperator;
@@ -14,16 +11,17 @@ import org.apache.flink.streaming.api.datastream.WindowedStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.streaming.api.functions.windowing.ProcessWindowFunction;
 import org.apache.flink.streaming.api.windowing.assigners.TumblingEventTimeWindows;
-import org.apache.flink.streaming.api.windowing.assigners.TumblingProcessingTimeWindows;
 import org.apache.flink.streaming.api.windowing.time.Time;
 import org.apache.flink.streaming.api.windowing.windows.TimeWindow;
 import org.apache.flink.util.Collector;
 
-public class Flink01_Window_EventTime_Tumbling_WaterMark {
+import java.time.Duration;
+
+public class Flink07_Window_EventTime_Tumbling_Bounded_WaterMark_Late {
     public static void main(String[] args) throws Exception {
         //1.流的执行环境
         StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
-        env.setParallelism(2);
+        env.setParallelism(1);
 
         //2.获取数据
         DataStreamSource<String> streamSource = env.socketTextStream("localhost", 9999);
@@ -35,13 +33,13 @@ public class Flink01_Window_EventTime_Tumbling_WaterMark {
                 String[] split = value.split(",");
                 return new WaterSensor(split[0], Long.parseLong(split[1]), Integer.parseInt(split[2]));
             }
-        }).setParallelism(1);
+        });
 
         //TODO 指定WaterMark
         SingleOutputStreamOperator<WaterSensor> timestampsAndWatermarks = waterSensorDStream.assignTimestampsAndWatermarks(
                 WatermarkStrategy
-                        //TODO 指定递增WaterMark乱序程度为0
-                        .<WaterSensor>forMonotonousTimestamps()
+                        //TODO 指定有乱序程度的WaterMark->乱序程度为2S
+                        .<WaterSensor>forBoundedOutOfOrderness(Duration.ofSeconds(2))
                         .withTimestampAssigner(new SerializableTimestampAssigner<WaterSensor>() {
                             //TODO 分配时间戳
                             @Override
@@ -54,7 +52,9 @@ public class Flink01_Window_EventTime_Tumbling_WaterMark {
         KeyedStream<WaterSensor, String> keyedStream = timestampsAndWatermarks.keyBy(WaterSensor::getId);
 
         //5.开启基于事件时间的滚动窗口
-        WindowedStream<WaterSensor, String, TimeWindow> window = keyedStream.window(TumblingEventTimeWindows.of(Time.seconds(5)));
+        WindowedStream<WaterSensor, String, TimeWindow> window = keyedStream.window(TumblingEventTimeWindows.of(Time.seconds(5)))
+                //TODO 设置允许迟到时间3S
+                .allowedLateness(Time.seconds(3));
 
         //6.处理
         window.process(new ProcessWindowFunction<WaterSensor, String, String, TimeWindow>() {
