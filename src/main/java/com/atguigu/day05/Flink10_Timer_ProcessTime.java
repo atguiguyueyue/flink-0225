@@ -37,8 +37,8 @@ public class Flink10_Timer_ProcessTime {
             public void processElement(WaterSensor value, Context ctx, Collector<String> out) throws Exception {
                 //1.注册定时器
                 long timer = ctx.timerService().currentProcessingTime();
-                System.out.println("在"+timer+"注册一个5秒定时器");
-                ctx.timerService().registerProcessingTimeTimer(timer+5000);
+//                System.out.println("在"+timer+"注册一个5秒定时器");
+                ctx.timerService().registerProcessingTimeTimer(timer+200);
             }
 
             /**
@@ -51,7 +51,8 @@ public class Flink10_Timer_ProcessTime {
              */
             @Override
             public void onTimer(long timestamp, OnTimerContext ctx, Collector<String> out) throws Exception {
-                out.collect(ctx.timerService().currentProcessingTime()+"闹钟响了！！！该起床了！！！");
+                out.collect("创建WaterMark");
+                ctx.timerService().registerProcessingTimeTimer(ctx.timerService().currentProcessingTime()+200);
             }
         }).print();
 
