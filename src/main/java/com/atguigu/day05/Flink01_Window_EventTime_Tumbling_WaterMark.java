@@ -7,6 +7,7 @@ import org.apache.flink.api.common.functions.FlatMapFunction;
 import org.apache.flink.api.common.functions.MapFunction;
 import org.apache.flink.api.java.functions.KeySelector;
 import org.apache.flink.api.java.tuple.Tuple2;
+import org.apache.flink.configuration.Configuration;
 import org.apache.flink.streaming.api.datastream.DataStreamSource;
 import org.apache.flink.streaming.api.datastream.KeyedStream;
 import org.apache.flink.streaming.api.datastream.SingleOutputStreamOperator;
@@ -22,7 +23,8 @@ import org.apache.flink.util.Collector;
 public class Flink01_Window_EventTime_Tumbling_WaterMark {
     public static void main(String[] args) throws Exception {
         //1.流的执行环境
-        StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
+//        StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
+        StreamExecutionEnvironment env = StreamExecutionEnvironment.createLocalEnvironmentWithWebUI(new Configuration());
         env.setParallelism(2);
 
         //2.获取数据
@@ -35,7 +37,7 @@ public class Flink01_Window_EventTime_Tumbling_WaterMark {
                 String[] split = value.split(",");
                 return new WaterSensor(split[0], Long.parseLong(split[1]), Integer.parseInt(split[2]));
             }
-        }).setParallelism(1);
+        });
 
         //TODO 指定WaterMark
         SingleOutputStreamOperator<WaterSensor> timestampsAndWatermarks = waterSensorDStream.assignTimestampsAndWatermarks(

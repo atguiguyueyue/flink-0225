@@ -11,6 +11,7 @@ import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.streaming.api.functions.KeyedProcessFunction;
 import org.apache.flink.util.Collector;
 
+import javax.sound.midi.Soundbank;
 import java.time.Duration;
 
 public class Flink11_Timer_EventTime {
@@ -50,6 +51,8 @@ public class Flink11_Timer_EventTime {
                 //1.注册基于处理时间定时器
 
                 System.out.println("注册一个5秒定时器");
+                System.out.println(ctx.timestamp());
+                System.out.println("WaterMark:"+ctx.timerService().currentWatermark());
                 ctx.timerService().registerEventTimeTimer(value.getTs()*100+5000);
             }
 

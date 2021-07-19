@@ -4,6 +4,7 @@ import com.atguigu.bean.WaterSensor;
 import org.apache.flink.api.common.eventtime.SerializableTimestampAssigner;
 import org.apache.flink.api.common.eventtime.WatermarkStrategy;
 import org.apache.flink.api.common.functions.MapFunction;
+import org.apache.flink.configuration.Configuration;
 import org.apache.flink.streaming.api.datastream.DataStreamSource;
 import org.apache.flink.streaming.api.datastream.KeyedStream;
 import org.apache.flink.streaming.api.datastream.SingleOutputStreamOperator;
@@ -23,6 +24,7 @@ public class Flink09_OutPut_Exe {
     public static void main(String[] args) throws Exception {
         //1.流的执行环境
         StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
+
         env.setParallelism(1);
 
         //2.获取数据
@@ -48,7 +50,9 @@ public class Flink09_OutPut_Exe {
                 if (value.getVc() <= 5) {
                     out.collect(value);
                 } else {
-                    ctx.output(new OutputTag<WaterSensor>("up5CM"){}, value);
+                    ctx.output(new OutputTag<WaterSensor>("up5CM"){
+
+                    }, value);
                 }
             }
         });
@@ -56,7 +60,7 @@ public class Flink09_OutPut_Exe {
         result.print("主流");
 
         result.getSideOutput(new OutputTag<WaterSensor>("up5CM") {
-        }).print("水位高于5CM");
+        }).print("侧输出");
 
 
         env.execute();
